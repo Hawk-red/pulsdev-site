@@ -469,9 +469,9 @@
               <svg viewBox="0 0 24 24"><path d="M21 5 3 11l6 2 2 6 3-5 5 3z" stroke-linecap="round" stroke-linejoin="round"/></svg>
               <span><b>Telegram</b><small>@pulsdev — самый быстрый ответ</small></span>
             </a>
-            <a class="chan" href="mailto:hello@pulsdev.net">
+            <a class="chan" href="mailto:pulsdevnet@gmail.com">
               <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6" stroke-linecap="round"/></svg>
-              <span><b>Почта</b><small>hello@pulsdev.net</small></span>
+              <span><b>Почта</b><small>pulsdevnet@gmail.com</small></span>
             </a>
           </div>
         </div>
@@ -511,7 +511,7 @@
     <div class="foot-col">
       <h5>Контакты</h5>
       <a href="https://t.me/pulsdev" target="_blank" rel="noopener">Telegram @pulsdev</a>
-      <a href="mailto:hello@pulsdev.net">hello@pulsdev.net</a>
+      <a href="mailto:pulsdevnet@gmail.com">pulsdevnet@gmail.com</a>
       <a href="#contact">Оставить заявку</a>
     </div>
   </div>
@@ -538,13 +538,36 @@
     document.getElementById('contact').scrollIntoView({behavior:'smooth'});
   });
 
-  // form (no backend yet — graceful demo handling)
-  document.getElementById('leadForm').addEventListener('submit',function(ev){
+  // form — отправка заявки в API PulsDev (Telegram)
+  const LEAD_ENDPOINT='https://api.pulsdev.net:9443/lead';
+  document.getElementById('leadForm').addEventListener('submit',async function(ev){
     ev.preventDefault();
-    const btn=this.querySelector('button');
-    btn.textContent='Заявка принята ✓';
-    btn.style.filter='saturate(1.2)';
-    setTimeout(()=>{btn.textContent='Отправить заявку';this.reset();},2600);
+    const form=this;
+    const btn=form.querySelector('button[type="submit"]');
+    const name=form.querySelector('[name="name"]').value.trim();
+    const contact=form.querySelector('[name="contact"]').value.trim();
+    const task=(form.querySelector('[name="task"]').value||'').trim();
+
+    if(!name||!contact){btn.textContent='Заполните имя и контакт';setTimeout(()=>btn.textContent='Отправить заявку',2200);return;}
+
+    const original=btn.textContent;
+    btn.disabled=true;
+    btn.textContent='Отправка…';
+    try{
+      const res=await fetch(LEAD_ENDPOINT,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({name,contact,task})
+      });
+      if(!res.ok) throw new Error('server');
+      form.reset();
+      btn.textContent='Заявка отправлена ✓';
+      btn.style.filter='saturate(1.2)';
+      setTimeout(()=>{btn.textContent=original;btn.style.filter='';btn.disabled=false;},3000);
+    }catch(e){
+      btn.textContent='Ошибка — напишите нам напрямую';
+      setTimeout(()=>{btn.textContent=original;btn.disabled=false;},3200);
+    }
   });
 </script>
 </body>
